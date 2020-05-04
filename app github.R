@@ -86,7 +86,7 @@ calculando_quota <- function(data_in, data_fim){
         aporte <- sum(df$Aporte[df$Data==i & df$Meta==j])
         valor_final <- sum(df$Saldo[df$Data==i & df$Meta==j])/qtd
         
-        new_qty <- qtd + aporte/valor
+        new_qty <- qtd + aporte/valor_final
         
         v_quota <- c(v_quota, valor_final)
         qtd_quota <- c(qtd_quota, new_qty)
@@ -111,7 +111,7 @@ calculando_quota <- function(data_in, data_fim){
         aporte <- sum(df$Aporte[df$Data==i])
         valor_final <- sum(df$Saldo[df$Data==i])/qtd
         
-        new_qty <- qtd + aporte/valor
+        new_qty <- qtd + aporte/valor_final
         
         v_quota <- c(v_quota, valor_final)
         qtd_quota <- c(qtd_quota, new_qty)
