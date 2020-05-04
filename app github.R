@@ -7,7 +7,7 @@ if (!require('googledrive')) install.packages('googledrive'); library('googledri
 if (!require('googlesheets4')) install.packages('googlesheets4'); library('googlesheets4')
 if (!require('lubridate')) install.packages('lubridate'); library('lubridate')
 
-url <-'cole aqui o url do arquivo googlesheets em seu próprio drive'
+url <-'cole aqui o url do arquivo googlesheets em seu prÃ³prio drive'
 
 ssid <- as_sheets_id(url)
 
@@ -65,7 +65,7 @@ df_agrupados_data_meta <- df_agrupados_data_meta %>% group_by(Meta) %>%
   mutate(Rendimentos = Saldo - lag(Total))
 df_agrupados_data_meta$Rendimentos[is.na(df_agrupados_data_meta$Rendimentos)] <- 0
 
-##### Função para filtrar tabela e adicionar quota
+##### FunÃ§Ã£o para filtrar tabela e adicionar quota
 calculando_quota <- function(data_in, data_fim){
   df <- df_agrupados_data_meta %>% filter(Data >= data_in, Data <= data_fim)
   meta_loop <- unique(df_metas$Meta)[!is.na(unique(df_metas$Meta))]
@@ -126,7 +126,7 @@ calculando_quota <- function(data_in, data_fim){
   return(df_result)
 }
 
-#filtrando apenas a última data
+#filtrando apenas a Ãºltima data
 df_agrupados_data_max <- df_agrupados_data_meta %>% filter(Data==data_max)
 
 filtrado_com_ipca <- function(data_in, data_fim){
@@ -158,7 +158,7 @@ filtrado_com_ipca <- function(data_in, data_fim){
   cdi$Cum_Rend <- cumsum(cdi$Juros)
   
   df$Data <- as.Date(df$Data)
-  #df$Juros <- df$Juros %>% replace(is.na(.), 0)
+  
   df <- df %>% group_by(Meta) %>%
     mutate(Cum_Rend = Juros)
   df <- bind_rows(df, ipca, cdi)
@@ -177,12 +177,12 @@ ui <- fluidPage(
       
       # Input: Slider for the number of bins ----
       sliderInput(inputId = "mesesipca",
-                  label = "Número de meses no cálculo da inflação:",
+                  label = "NÃºmero de meses no cÃ¡lculo da inflaÃ§Ã£o:",
                   min = 1,
                   max = 100,
                   value = 20),
       sliderInput(inputId = "rendimentomedio",
-                  label = "Valor médio dos rendimentos mensais em %:",
+                  label = "Valor mÃ©dio dos rendimentos mensais em %:",
                   min = 0.1,
                   max = 2,
                   value = 0.65),
@@ -270,7 +270,7 @@ server <- function(input, output, session) {
   })
   
   output$texto_ipca <- renderText({
-    print(paste0("A inflação média considerada é de ",as.character(round(avg_ipca(),3)),"% ao mês. ",
+    print(paste0("A inflaÃ§Ã£o mÃ©dia considerada Ã© de ",as.character(round(avg_ipca(),3)),"% ao mÃªs. ",
     "O valor escolhido dos rendimentos dos investimentos daria ", 
                  as.character(rendimento_anual()),"% ao ano." ))
   })
