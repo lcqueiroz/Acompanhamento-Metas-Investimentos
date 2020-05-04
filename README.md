@@ -1,4 +1,4 @@
-# Investimentos
+# Overview Metas e Investimentos
 Shiny app para acompanhar evolução dos investimentos a partir dos saldos e aportes mensais.
 
 Faça uma cópia do googlesheet para o seu drive pessoal e insira o link do novo arquivo no código.
