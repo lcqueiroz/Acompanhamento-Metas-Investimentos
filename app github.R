@@ -245,10 +245,10 @@ server <- function(input, output, session) {
     
     ## Calculo do aporte mensal
     df <- df_agrupados_data_max %>% select(c("Meta", "Total"))
-    colnames(df) <- c("Meta", "Total Acumulado")
+    colnames(df) <- c("Meta", "Total_Acumulado")
     df_metas <- df_metas %>% left_join(df, by="Meta")
-    df_metas$`Total Acumulado`[is.na(df_metas$`Total Acumulado`)] <- 0
-    df_metas$Valor_Faltando <- df_metas$FV_Objetivo - df_metas$`Total Acumulado`
+    df_metas$Total_Acumulado[is.na(df_metas$Total_Acumulado)] <- 0
+    df_metas$Valor_Faltando <- df_metas$FV_Objetivo - df_metas$Total_Acumulado*(1+rendimento_medio)**df_metas$Meses_Faltando
     
     df_metas$Aporte_Mensal <- (df_metas$Valor_Faltando*rendimento_medio)/ ((1+rendimento_medio)**df_metas$Meses_Faltando - 1)
     
@@ -263,7 +263,7 @@ server <- function(input, output, session) {
     df_metas$Objetivo <- Map(printCurrency, df_metas$Objetivo)
     df_metas$Aporte_Mensal <- Map(printCurrency, df_metas$Aporte_Mensal)
     df_metas$Valor_Faltando<- Map(printCurrency, df_metas$Valor_Faltando)
-    df_metas$`Total Acumulado` <- Map(printCurrency, df_metas$`Total Acumulado`)
+    df_metas$Total+Acumulado <- Map(printCurrency, df_metas$Total_Acumulado)
     df_metas$Meses_Faltando <- gsub('.00', '', as.character(df_metas$Meses_Faltando))
     colnames(df_metas) <- gsub("_", " ",colnames(df_metas))
     return(df_metas)
@@ -271,7 +271,7 @@ server <- function(input, output, session) {
   
   output$texto_ipca <- renderText({
     print(paste0("A inflação média considerada é de ",as.character(round(avg_ipca(),3)),"% ao mês. ",
-    "O valor escolhido dos rendimentos dos investimentos daria ", 
+    "O valor escolhido dos rendimentos dos investimentos é de ", 
                  as.character(rendimento_anual()),"% ao ano." ))
   })
   
