@@ -1,5 +1,5 @@
-# Overview Metas e Investimentos
-Shiny app para acompanhar evolução dos investimentos a partir dos saldos e aportes mensais.
+# Acompanhamento Metas e Investimentos
+Shiny app para acompanhar evolução dos investimentos a partir dos inputs manuais de saldos e aportes mensais.
 
 Como usar: https://youtu.be/szDp-9SuWmU
 
