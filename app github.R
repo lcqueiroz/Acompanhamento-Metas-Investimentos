@@ -25,20 +25,6 @@ df_saldos <- sheets_read(ssid, sheet = 'Saldos')
 df_ipca <- BETSget(433, data.frame = T) %>% filter(date >= date("2010-01-01"))
 df_cdi <- BETSget(4391, data.frame = T) %>% filter(date >= date("2019-01-01"))
 
-#Funcao para calcular a media ponderada do ipca 
-media_ipca <- function(numero_meses_media, df=df_ipca){
-  #vetor <- seq(1,numero_meses_media)
-  #vetor <- vetor/sum(vetor)
-  vetor <- rep(1, numero_meses_media) #media sem pesos
-  missing_rows <- nrow(df)-length(vetor)
-  if (missing_rows > 0){
-    vetor <- c(rep(0,missing_rows), vetor)}
-  else {
-    vetor <- tail(vetor, n=nrow(df))
-  }
-  df$vetor <- vetor
-  return(df)
-}
 
 printCurrency <- function(value, currency.sym="R$", digits=2, sep=".", decimal=",") {
   paste(
@@ -176,11 +162,11 @@ ui <- fluidPage(
     sidebarPanel(
       
       # Input: Slider for the number of bins ----
-      sliderInput(inputId = "mesesipca",
-                  label = "Número de meses no cálculo da inflação:",
-                  min = 1,
-                  max = 100,
-                  value = 20),
+      sliderInput(inputId = "ipcamensal",
+                  label = "Valor da inflação mensal:",
+                  min = 0.1,
+                  max = 1.5,
+                  value = 0.35),
       sliderInput(inputId = "rendimentomedio",
                   label = "Valor médio dos rendimentos mensais em %:",
                   min = 0.1,
@@ -217,11 +203,8 @@ server <- function(input, output, session) {
   
   avg_ipca <- reactive({
     
-    df_new <- media_ipca(as.numeric(input$mesesipca))
-    
-    #Calculo da media do ipca
-    weighted_average_ipca <- sum(df_new$value*df_new$vetor)/sum(df_new$vetor)
-    return(weighted_average_ipca)
+    ipca_mensal <- as.numeric(input$ipcamensal)
+    return(ipca_mensal)
   })
   
   rendimento_anual <- reactive({
@@ -270,9 +253,9 @@ server <- function(input, output, session) {
   })
   
   output$texto_ipca <- renderText({
-    print(paste0("A inflação média considerada é de ",as.character(round(avg_ipca(),3)),"% ao mês. ",
-    "O valor escolhido dos rendimentos dos investimentos é de ", 
-                 as.character(rendimento_anual()),"% ao ano." ))
+    print(paste0("A inflação média considerada é de ",as.character(round(avg_ipca()*12,3)),"% ao ano. ",
+    "O valor escolhido dos rendimentos dos investimentos equivale a ", 
+                 as.character(rendimento_anual()),"% ao ano." )
   })
   
   output$view1 <- renderTable({
