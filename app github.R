@@ -174,7 +174,7 @@ ui <- fluidPage(
                   value = 0.65),
       dateRangeInput("datas", "Intervalo de datas", start=data_min, end = data_max,
                      min= data_min, max= data_max, language = "pt-BR")
-    ,width=3),
+      ,width=3),
     
     # Main panel for displaying outputs ----
     mainPanel(
@@ -246,84 +246,84 @@ server <- function(input, output, session) {
     df_metas$Objetivo <- Map(printCurrency, df_metas$Objetivo)
     df_metas$Aporte_Mensal <- Map(printCurrency, df_metas$Aporte_Mensal)
     df_metas$Valor_Faltando<- Map(printCurrency, df_metas$Valor_Faltando)
-    df_metas$Total+Acumulado <- Map(printCurrency, df_metas$Total_Acumulado)
+    df_metas$Total_Acumulado <- Map(printCurrency, df_metas$Total_Acumulado)
     df_metas$Meses_Faltando <- gsub('.00', '', as.character(df_metas$Meses_Faltando))
     colnames(df_metas) <- gsub("_", " ",colnames(df_metas))
     return(df_metas)
   })
   
   output$texto_ipca <- renderText({
-    print(paste0("A inflação média considerada é de ",as.character(round(avg_ipca()*12,3)),"% ao ano. ",
-    "O valor escolhido dos rendimentos dos investimentos equivale a ", 
+    paste0("A inflação média considerada é de ",as.character(round(avg_ipca()*12,3)),"% ao ano. ",
+                 "O valor escolhido dos rendimentos dos investimentos equivale a ", 
                  as.character(rendimento_anual()),"% ao ano." )
   })
-  
-  output$view1 <- renderTable({
-    metas()
-  })
-  
-  dates_input <- reactive({
-    data_inicio <- input$datas[1]
-    data_final <- input$datas[2]
     
-    x <- filtrado_com_ipca(data_inicio, data_final)
-    return(x)
-  })
-  
-  p1 <- reactive({ggplot(dates_input()) + geom_line(aes(x=Data, y=Cum_Rend, color=Meta)) + 
-    labs(color = "Legenda", y="% acumulado")+
-    scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
-    ggtitle("Rendimentos acumulados")
-  })
-  
-  output$plot1 <- renderPlotly({
-    ggplotly(p1())
-  })
-  
-  inflation <- reactive({
-    df <- dates_input()
-    inflation <- df$Cum_Rend[df$Meta=="IPCA" & df$Data==input$datas[2]][1]
-    return(inflation)
-  })
+    output$view1 <- renderTable({
+      metas()
+    })
     
-  tabela_rend <- reactive({
-    n_meses <- round(as.numeric(difftime(input$datas[2], input$datas[1], units = 'days'))/30,0)
+    dates_input <- reactive({
+      data_inicio <- input$datas[1]
+      data_final <- input$datas[2]
+      
+      x <- filtrado_com_ipca(data_inicio, data_final)
+      return(x)
+    })
     
-    df <- dates_input() %>% filter(!Meta %in% c("IPCA", "CDI")) %>% group_by(Meta) %>%
-      summarise(Ultima_data = max(Data), Rendimentos_do_periodo = sum(Rendimentos)) %>%
-      left_join(dates_input(), by=c("Ultima_data"="Data", "Meta"="Meta"))
+    p1 <- reactive({ggplot(dates_input()) + geom_line(aes(x=Data, y=Cum_Rend, color=Meta)) + 
+        labs(color = "Legenda", y="% acumulado")+
+        scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+        ggtitle("Rendimentos acumulados")
+    })
     
-    df <- df %>% select(Meta, Rendimentos_do_periodo, Juros) #Filtrando as colunas a serem mostradas
+    output$plot1 <- renderPlotly({
+      ggplotly(p1())
+    })
     
-    df$Rendimentos_do_periodo[df$Meta=="Total"] <- sum(df$Rendimentos_do_periodo[!df$Meta=="Total"])
-    df$Rendimentos_do_periodo <- Map(printCurrency, df$Rendimentos_do_periodo)
+    inflation <- reactive({
+      df <- dates_input()
+      inflation <- df$Cum_Rend[df$Meta=="IPCA" & df$Data==input$datas[2]][1]
+      return(inflation)
+    })
     
+    tabela_rend <- reactive({
+      n_meses <- round(as.numeric(difftime(input$datas[2], input$datas[1], units = 'days'))/30,0)
+      
+      df <- dates_input() %>% filter(!Meta %in% c("IPCA", "CDI", "Dolar")) %>% group_by(Meta) %>%
+        summarise(Ultima_data = max(Data), Rendimentos_do_periodo = sum(Rendimentos)) %>%
+        left_join(dates_input(), by=c("Ultima_data"="Data", "Meta"="Meta"))
+      
+      df <- df %>% select(Meta, Rendimentos_do_periodo, Juros) #Filtrando as colunas a serem mostradas
+      
+      df$Rendimentos_do_periodo[df$Meta=="Total"] <- sum(df$Rendimentos_do_periodo[!df$Meta=="Total"])
+      df$Rendimentos_do_periodo <- Map(printCurrency, df$Rendimentos_do_periodo)
+      
+      
+      df$Juros_real <- df$Juros - inflation()
+      
+      df$Taxa_mensal_equivalente <- ((1+df$Juros/100)**(1/n_meses) - 1)*100
+      
+      df$Taxa_mensal_equivalente <- paste0(as.character(round(df$Taxa_mensal_equivalente, 3)),"%")
+      df$Juros <- paste0(as.character(round(df$Juros, 3)),"%")
+      df$Juros_real <- paste0(as.character(round(df$Juros_real, 3)),"%")
+      match_order <- c(df$Meta=="Total")
+      df <- rbind(df[!match_order,], df[match_order,])
+      colnames(df) <- gsub("_", " ",colnames(df))
+      return(df)
+    })
     
-    df$Juros_real <- df$Juros - inflation()
+    output$view2 <- renderTable({
+      tabela_rend()
+    })
     
-    df$Taxa_mensal_equivalente <- ((1+df$Juros/100)**(1/n_meses) - 1)*100
-    
-    df$Taxa_mensal_equivalente <- paste0(as.character(round(df$Taxa_mensal_equivalente, 3)),"%")
-    df$Juros <- paste0(as.character(round(df$Juros, 3)),"%")
-    df$Juros_real <- paste0(as.character(round(df$Juros_real, 3)),"%")
-    match_order <- c(df$Meta=="Total")
-    df <- rbind(df[!match_order,], df[match_order,])
-    colnames(df) <- gsub("_", " ",colnames(df))
-    return(df)
-  })
-  
-  output$view2 <- renderTable({
-    tabela_rend()
-  })
-  
-  p2 <- reactive({ggplot(dates_input(), aes(x=Data, y=Total, fill=Meta)) + geom_bar(stat = "sum", show.legend=c(size=FALSE)) + 
-      labs(y="R$")+
-      scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
-      ggtitle("Saldo")
-  })
-  output$plot2 <- renderPlotly({
-    ggplotly(p2(), tooltip = c("y"))
-  })
+    p2 <- reactive({ggplot(dates_input(), aes(x=Data, y=Total, fill=Meta)) + geom_bar(stat = "sum", show.legend=c(size=FALSE)) + 
+        labs(y="R$")+
+        scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+        ggtitle("Saldo")
+    })
+    output$plot2 <- renderPlotly({
+      ggplotly(p2(), tooltip = c("y"))
+    })
 }
 
 shinyApp(ui, server)
